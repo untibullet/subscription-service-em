@@ -1,0 +1,74 @@
+@baseUrl = http://localhost:9000/api/v1/subscriptions
+
+### Создать подписку #1
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "service_name": "Yandex Plus",
+  "price": 400,
+  "user_id": "60601fee-2bf1-4721-ae6f-7636e79a0cba",
+  "start_date": "07-2025"
+}
+
+### Создать подписку #2 с end_date
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "service_name": "Netflix",
+  "price": 800,
+  "user_id": "60601fee-2bf1-4721-ae6f-7636e79a0cba",
+  "start_date": "01-2025",
+  "end_date": "12-2025"
+}
+
+### Создать подписку #3 для другого пользователя
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "service_name": "Spotify",
+  "price": 200,
+  "user_id": "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+  "start_date": "05-2025"
+}
+
+### Получить подписку по ID (замени ID после создания)
+GET {{baseUrl}}/a7551798-7199-4bdd-9764-de2bef4130a8
+
+### Список всех подписок
+GET {{baseUrl}}
+
+### Список подписок пользователя
+GET {{baseUrl}}?user_id=60601fee-2bf1-4721-ae6f-7636e79a0cba
+
+### Список подписок по сервису
+GET {{baseUrl}}?service_name=Netflix
+
+### Список с пагинацией
+GET {{baseUrl}}?limit=10&offset=1
+
+### Обновить подписку (замени ID)
+PUT {{baseUrl}}/60601fee-2bf1-4721-ae6f-7636e79a0cba
+Content-Type: application/json
+
+{
+  "price": 500,
+  "end_date": "06-2026"
+}
+
+### Удалить подписку (замени ID)
+DELETE {{baseUrl}}/60601fee-2bf1-4721-ae6f-7636e79a0cba
+
+### Рассчитать стоимость за период для пользователя
+GET {{baseUrl}}/cost?user_id=60601fee-2bf1-4721-ae6f-7636e79a0cba&start_period=01-2025&end_period=12-2025
+
+### Рассчитать стоимость за период по сервису
+GET {{baseUrl}}/cost?service_name=Netflix&start_period=01-2025&end_period=12-2025
+
+### Рассчитать общую стоимость за период
+GET {{baseUrl}}/cost?start_period=01-2025&end_period=12-2025
+
+### Рассчитать стоимость с фильтром по пользователю и сервису
+GET {{baseUrl}}/cost?user_id=60601fee-2bf1-4721-ae6f-7636e79a0cba&service_name=Yandex Plus&start_period=07-2025&end_period=12-2025

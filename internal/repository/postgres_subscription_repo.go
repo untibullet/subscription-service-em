@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -125,40 +126,42 @@ func (r *PostgresSubscriptionRepo) Delete(ctx context.Context, id uuid.UUID) err
 
 // List возвращает список подписок с фильтрацией
 func (r *PostgresSubscriptionRepo) List(ctx context.Context, filter models.SubscriptionFilter) ([]*models.Subscription, error) {
-	query := `
+	var query strings.Builder
+	query.WriteString(`
 		SELECT id, service_name, price, user_id, start_date, end_date, created_at, updated_at
 		FROM subscriptions
 		WHERE 1=1
-	`
-	args := []interface{}{}
+	`)
+
+	args := make([]interface{}, 0)
 	argPos := 1
 
 	if filter.UserID != nil {
-		query += fmt.Sprintf(" AND user_id = $%d", argPos)
+		query.WriteString(fmt.Sprintf(" AND user_id = $%d", argPos))
 		args = append(args, *filter.UserID)
 		argPos++
 	}
 
 	if filter.ServiceName != nil {
-		query += fmt.Sprintf(" AND service_name = $%d", argPos)
+		query.WriteString(fmt.Sprintf(" AND service_name = $%d", argPos))
 		args = append(args, *filter.ServiceName)
 		argPos++
 	}
 
-	query += " ORDER BY created_at DESC"
+	query.WriteString(" ORDER BY created_at DESC")
 
 	if filter.Limit > 0 {
-		query += fmt.Sprintf(" LIMIT $%d", argPos)
+		query.WriteString(fmt.Sprintf(" LIMIT $%d", argPos))
 		args = append(args, filter.Limit)
 		argPos++
 	}
 
 	if filter.Offset > 0 {
-		query += fmt.Sprintf(" OFFSET $%d", argPos)
+		query.WriteString(fmt.Sprintf(" OFFSET $%d", argPos))
 		args = append(args, filter.Offset)
 	}
 
-	rows, err := r.pool.Query(ctx, query, args...)
+	rows, err := r.pool.Query(ctx, query.String(), args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list subscriptions: %w", err)
 	}
@@ -192,28 +195,30 @@ func (r *PostgresSubscriptionRepo) List(ctx context.Context, filter models.Subsc
 
 // CalculateCost подсчитывает суммарную стоимость подписок за период
 func (r *PostgresSubscriptionRepo) CalculateCost(ctx context.Context, filter models.CostFilter) (int, error) {
-	query := `
+	var query strings.Builder
+	query.WriteString(`
 		SELECT COALESCE(SUM(price), 0) as total_cost
 		FROM subscriptions
 		WHERE start_date <= $1
 		  AND (end_date IS NULL OR end_date >= $2)
-	`
+	`)
+
 	args := []interface{}{filter.EndPeriod, filter.StartPeriod}
 	argPos := 3
 
 	if filter.UserID != nil {
-		query += fmt.Sprintf(" AND user_id = $%d", argPos)
+		query.WriteString(fmt.Sprintf(" AND user_id = $%d", argPos))
 		args = append(args, *filter.UserID)
 		argPos++
 	}
 
 	if filter.ServiceName != nil {
-		query += fmt.Sprintf(" AND service_name = $%d", argPos)
+		query.WriteString(fmt.Sprintf(" AND service_name = $%d", argPos))
 		args = append(args, *filter.ServiceName)
 	}
 
 	var totalCost int
-	err := r.pool.QueryRow(ctx, query, args...).Scan(&totalCost)
+	err := r.pool.QueryRow(ctx, query.String(), args...).Scan(&totalCost)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate cost: %w", err)
 	}
