@@ -77,7 +77,7 @@
 4. **Проверьте работу сервиса:**
    - **API:** `http://localhost:8081/api/v1/subscriptions` (или порт, указанный в `HOST_PORT`)
    - **Swagger UI:** `http://localhost:8081/swagger/index.html`
-   - **REST Client (VS Code):** Откройте файл `requests.http` и выполняйте запросы напрямую из редактора
+   - **REST Client (VS Code):** Откройте файл `requests.http` и выполняйте запросы напрямую из редактора (не забудьте установить правильный порт в `@baseUrl`)
 
 ### Остановка сервисов
 

@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:9000/api/v1/subscriptions
+@baseUrl = http://localhost:8081/api/v1/subscriptions
 
 ### Создать подписку #1
 POST {{baseUrl}}
