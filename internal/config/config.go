@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -34,28 +35,29 @@ type LoggerConfig struct {
 }
 
 func Load() (*Config, error) {
-	// Читаем из переменной окружения или дефолт
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		configPath = "config.yaml"
-	}
-
+	// Читаем config.yaml с параметрами по умолчанию
+	configPath := getEnv("CONFIG_PATH", "config.yaml")
 	viper.SetConfigFile(configPath)
 	viper.SetConfigType("yaml")
 
-	// Переменные окружения имеют приоритет над файлом
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("APP") // Префикс для env: APP_SERVER_PORT
+	// Читаем YAML (игнорируем ошибку, если файла нет)
+	_ = viper.ReadInConfig()
 
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
+	// Настраиваем чтение переменных окружения
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	// Явный биндинг для переменных окружения (для docker-compose)
+	bindEnvVariables()
 
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
+	// Переопределяем из ENV (приоритет над YAML)
+	overrideFromEnv(&cfg)
+	
 	if err := validate(&cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
@@ -63,15 +65,47 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
-func setDefaults() {
-	viper.SetDefault("SERVER_PORT", "8080")
-	viper.SetDefault("SERVER_HOST", "0.0.0.0")
-	viper.SetDefault("DB_HOST", "localhost")
-	viper.SetDefault("DB_PORT", "5432")
-	viper.SetDefault("DB_SSL_MODE", "disable")
-	viper.SetDefault("LOG_LEVEL", "info")
-	viper.SetDefault("LOG_FORMAT", "json")
-	viper.SetDefault("ENV", "development")
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func bindEnvVariables() {
+	// Биндим переменные окружения к путям в структуре
+	_ = viper.BindEnv("database.host", "APP_DATABASE_HOST")
+	_ = viper.BindEnv("database.port", "APP_DATABASE_PORT")
+	_ = viper.BindEnv("database.user", "APP_DATABASE_USER")
+	_ = viper.BindEnv("database.password", "APP_DATABASE_PASSWORD")
+	_ = viper.BindEnv("database.name", "APP_DATABASE_NAME")
+	_ = viper.BindEnv("server.port", "APP_SERVER_PORT")
+	_ = viper.BindEnv("server.host", "APP_SERVER_HOST")
+}
+
+func overrideFromEnv(cfg *Config) {
+	// Явное чтение критичных ENV
+	if v := os.Getenv("APP_DATABASE_HOST"); v != "" {
+		cfg.Database.Host = v
+	}
+	if v := os.Getenv("APP_DATABASE_PORT"); v != "" {
+		cfg.Database.Port = v
+	}
+	if v := os.Getenv("APP_DATABASE_USER"); v != "" {
+		cfg.Database.User = v
+	}
+	if v := os.Getenv("APP_DATABASE_PASSWORD"); v != "" {
+		cfg.Database.Password = v
+	}
+	if v := os.Getenv("APP_DATABASE_NAME"); v != "" {
+		cfg.Database.Name = v
+	}
+	if v := os.Getenv("APP_SERVER_PORT"); v != "" {
+		cfg.Server.Port = v
+	}
+	if v := os.Getenv("APP_SERVER_HOST"); v != "" {
+		cfg.Server.Host = v
+	}
 }
 
 func validate(cfg *Config) error {

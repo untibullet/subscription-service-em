@@ -53,7 +53,7 @@ func main() {
 	// Repository
 	repo := repository.NewPostgresSubscriptionRepo(pool)
 
-	// Service (handlers)
+	// Сервис
 	httpService := service.NewHTTPService(repo, logger)
 
 	// Echo
@@ -62,13 +62,13 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	// Routes
+	// Ручки
 	httpService.RegisterRoutes(e)
 
 	// Swagger UI
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	// Start
+	// Старт
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("starting server", zap.String("addr", addr))
 	if err := e.Start(addr); err != nil {

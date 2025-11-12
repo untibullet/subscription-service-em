@@ -4,13 +4,13 @@ services:
     container_name: subscription-service-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: subscription_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
       PGDATA: /var/lib/postgresql/data/pgdata
       TZ: UTC
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,12 +20,53 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - security-network
+      - subscription-network
+  
+  migrator:
+    image: ghcr.io/kukymbr/goose-docker:3.18.0
+    container_name: subscription-migrator
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro,Z
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "host=db port=${DB_PORT} user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} sslmode=disable"
+      GOOSE_MIGRATION_DIR: /migrations
+    command: ["up"]
+    networks:
+      - subscription-network
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: subscription-service-app
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT}:${APP_PORT}"
+    environment:
+      APP_DATABASE_HOST: ${DB_HOST}
+      APP_DATABASE_PORT: ${DB_PORT}
+      APP_DATABASE_USER: ${DB_USER}
+      APP_DATABASE_PASSWORD: ${DB_PASSWORD}
+      APP_DATABASE_NAME: ${DB_NAME}
+      APP_SERVER_PORT: ${APP_PORT}
+      APP_SERVER_HOST: "0.0.0.0"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro,Z
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - subscription-network
 
 volumes:
   postgres_data:
     driver: local
 
 networks:
-  security-network:
+  subscription-network:
     driver: bridge

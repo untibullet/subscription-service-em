@@ -1,7 +1,9 @@
+# Default params
 server:
   host: "0.0.0.0"
-  port: "9000"
+  port: "8081"
 
+# Default params
 database:
   host: "localhost"
   port: "5432"

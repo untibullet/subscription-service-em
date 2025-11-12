@@ -30,12 +30,12 @@ Content-Type: application/json
 {
   "service_name": "Spotify",
   "price": 200,
-  "user_id": "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+  "user_id": "cb98062e-91ae-4ead-985a-6215dc48f156",
   "start_date": "05-2025"
 }
 
 ### Получить подписку по ID (замени ID после создания)
-GET {{baseUrl}}/a7551798-7199-4bdd-9764-de2bef4130a8
+GET {{baseUrl}}/<<ID_подписки>>
 
 ### Список всех подписок
 GET {{baseUrl}}
@@ -50,7 +50,7 @@ GET {{baseUrl}}?service_name=Netflix
 GET {{baseUrl}}?limit=10&offset=1
 
 ### Обновить подписку (замени ID)
-PUT {{baseUrl}}/60601fee-2bf1-4721-ae6f-7636e79a0cba
+PUT {{baseUrl}}/<<ID_подписки>>
 Content-Type: application/json
 
 {
@@ -59,7 +59,7 @@ Content-Type: application/json
 }
 
 ### Удалить подписку (замени ID)
-DELETE {{baseUrl}}/840ebdc5-2f6d-40d6-b6ae-7e74e4099bc5
+DELETE {{baseUrl}}/<<ID_подписки>>
 
 ### Рассчитать стоимость за период для пользователя
 GET {{baseUrl}}/cost?user_id=60601fee-2bf1-4721-ae6f-7636e79a0cba&start_period=01-2025&end_period=12-2025
@@ -71,4 +71,4 @@ GET {{baseUrl}}/cost?service_name=Netflix&start_period=01-2025&end_period=12-202
 GET {{baseUrl}}/cost?start_period=01-2025&end_period=12-2025
 
 ### Рассчитать стоимость с фильтром по пользователю и сервису
-GET {{baseUrl}}/cost?user_id=60601fee-2bf1-4721-ae6f-7636e79a0cba&service_name=Yandex Plus&start_period=07-2025&end_period=12-2025
+GET {{baseUrl}}/cost?user_id=cb98062e-91ae-4ead-985a-6215dc48f156&service_name=Yandex Plus&start_period=07-2025&end_period=12-2025
