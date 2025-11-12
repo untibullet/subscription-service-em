@@ -8,12 +8,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "github.com/untibullet/subscription-service-em/docs"
 	"github.com/untibullet/subscription-service-em/internal/config"
 	"github.com/untibullet/subscription-service-em/internal/repository"
 	"github.com/untibullet/subscription-service-em/internal/service"
 	"go.uber.org/zap"
 )
 
+// @title Subscription Service API
+// @version 1.0
+// @description API для управления подписками
+// @host localhost:9000
+// @BasePath /api/v1
 func main() {
 	// Конфиг
 	cfg, err := config.Load()
@@ -57,6 +64,9 @@ func main() {
 
 	// Routes
 	httpService.RegisterRoutes(e)
+
+	// Swagger UI
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Start
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)

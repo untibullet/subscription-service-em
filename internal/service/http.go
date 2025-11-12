@@ -33,6 +33,7 @@ func (s *HTTPService) RegisterRoutes(e *echo.Echo) {
 
 // DTOs
 
+// swagger:model CreateRequest
 type createReq struct {
 	ServiceName string    `json:"service_name" validate:"required,min=1,max=255"`
 	Price       int       `json:"price" validate:"required,gt=0"`
@@ -41,6 +42,7 @@ type createReq struct {
 	EndDate     *string   `json:"end_date,omitempty"`             // MM-YYYY
 }
 
+// swagger:model UpdateRequest
 type updateReq struct {
 	ServiceName *string `json:"service_name,omitempty" validate:"omitempty,min=1,max=255"`
 	Price       *int    `json:"price,omitempty" validate:"omitempty,gt=0"`
@@ -48,11 +50,13 @@ type updateReq struct {
 	EndDate     *string `json:"end_date,omitempty"`   // MM-YYYY
 }
 
+// swagger:model listResp
 type listResp struct {
 	Data  []*models.Subscription `json:"data"`
 	Total int                   `json:"total"`
 }
 
+// swagger:model costResp
 type costResp struct {
 	Total int `json:"total"`
 }
@@ -71,6 +75,17 @@ func parseMonth(s string) (time.Time, error) {
 
 // Handlers
 
+// @Summary Создать новую подписку
+// @Description Создаёт новую подписку на сервис
+// @ID create-subscription
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param input body createReq true "Данные подписки"
+// @Success 201 {object} models.Subscription "Созданная подписка"
+// @Failure 400 {object} echo.Map "Неверный запрос"
+// @Failure 500 {object} echo.Map "Внутренняя ошибка сервера"
+// @Router /api/v1/subscriptions [post]
 func (s *HTTPService) Create(c echo.Context) error {
 	var req createReq
 	if err := c.Bind(&req); err != nil {
@@ -114,6 +129,18 @@ func (s *HTTPService) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, sub)
 }
 
+// @Summary Получить подписку по ID
+// @Description Возвращает информацию о подписке по её уникальному идентификатору
+// @ID get-subscription-by-id
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param id path string true "UUID идентификатор подписки"
+// @Success 200 {object} models.Subscription "Информация о подписке"
+// @Failure 400 {object} echo.Map "Неверный формат ID"
+// @Failure 404 {object} echo.Map "Подписка не найдена"
+// @Failure 500 {object} echo.Map "Внутренняя ошибка сервера"
+// @Router /api/v1/subscriptions/{id} [get]
 func (s *HTTPService) GetByID(c echo.Context) error {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -134,6 +161,19 @@ func (s *HTTPService) GetByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, sub)
 }
 
+// @Summary Обновить подписку
+// @Description Обновляет существующую подписку по её ID
+// @ID update-subscription
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param id path string true "UUID идентификатор подписки"
+// @Param input body updateReq true "Данные для обновления"
+// @Success 200 {object} models.Subscription "Обновлённая подписка"
+// @Failure 400 {object} echo.Map "Неверный запрос"
+// @Failure 404 {object} echo.Map "Подписка не найдена"
+// @Failure 500 {object} echo.Map "Внутренняя ошибка сервера"
+// @Router /api/v1/subscriptions/{id} [put]
 func (s *HTTPService) Update(c echo.Context) error {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -198,6 +238,18 @@ func (s *HTTPService) Update(c echo.Context) error {
 	return c.JSON(http.StatusOK, sub)
 }
 
+// @Summary Удалить подписку
+// @Description Удаляет подписку по её ID
+// @ID delete-subscription
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param id path string true "UUID идентификатор подписки"
+// @Success 204 "Подписка удалена"
+// @Failure 400 {object} echo.Map "Неверный формат ID"
+// @Failure 404 {object} echo.Map "Подписка не найдена"
+// @Failure 500 {object} echo.Map "Внутренняя ошибка сервера"
+// @Router /api/v1/subscriptions/{id} [delete]
 func (s *HTTPService) Delete(c echo.Context) error {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -217,6 +269,20 @@ func (s *HTTPService) Delete(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+// @Summary Список подписок
+// @Description Возвращает список подписок с фильтрацией и пагинацией
+// @ID list-subscriptions
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param user_id query string false "UUID пользователя"
+// @Param service_name query string false "Название сервиса"
+// @Param limit query int false "Количество элементов (макс. 500)" default(50)
+// @Param offset query int false "Смещение" default(0)
+// @Success 200 {object} listResp "Список подписок"
+// @Failure 400 {object} echo.Map "Неверный запрос"
+// @Failure 500 {object} echo.Map "Внутренняя ошибка сервера"
+// @Router /api/v1/subscriptions [get]
 func (s *HTTPService) List(c echo.Context) error {
 	var (
 		userIDPtr   *uuid.UUID
@@ -261,7 +327,6 @@ func (s *HTTPService) List(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "failed to list"})
 	}
 
-	// total опционально, если нужно — добавим отдельный метод Count
 	resp := listResp{
 		Data:  items,
 		Total: len(items),
@@ -269,6 +334,20 @@ func (s *HTTPService) List(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+// @Summary Рассчитать стоимость подписок за период
+// @Description Возвращает суммарную стоимость подписок пользователя или сервиса за указанный период
+// @ID calculate-cost
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param start_period query string true "Начало периода (формат MM-YYYY)"
+// @Param end_period query string true "Конец периода (формат MM-YYYY)"
+// @Param user_id query string false "UUID пользователя"
+// @Param service_name query string false "Название сервиса"
+// @Success 200 {object} costResp "Суммарная стоимость"
+// @Failure 400 {object} echo.Map "Неверный запрос"
+// @Failure 500 {object} echo.Map "Внутренняя ошибка сервера"
+// @Router /api/v1/subscriptions/cost [get]
 func (s *HTTPService) CalculateCost(c echo.Context) error {
 	var (
 		userIDPtr   *uuid.UUID

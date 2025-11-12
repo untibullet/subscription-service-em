@@ -7,6 +7,7 @@ import (
 )
 
 // Subscription представляет подписку пользователя
+// swagger:model Subscription
 type Subscription struct {
 	ID          uuid.UUID  `json:"id"`
 	ServiceName string     `json:"service_name"`
@@ -19,6 +20,7 @@ type Subscription struct {
 }
 
 // CreateSubscriptionDTO - входные данные для создания подписки
+// swagger:model CreateSubscriptionDTO
 type CreateSubscriptionDTO struct {
 	ServiceName string    `json:"service_name" validate:"required,min=1,max=255"`
 	Price       int       `json:"price" validate:"required,gt=0"`
@@ -28,6 +30,7 @@ type CreateSubscriptionDTO struct {
 }
 
 // UpdateSubscriptionDTO - входные данные для обновления подписки
+// swagger:model UpdateSubscriptionDTO
 type UpdateSubscriptionDTO struct {
 	ServiceName *string    `json:"service_name,omitempty" validate:"omitempty,min=1,max=255"`
 	Price       *int       `json:"price,omitempty" validate:"omitempty,gt=0"`
@@ -36,6 +39,7 @@ type UpdateSubscriptionDTO struct {
 }
 
 // SubscriptionFilter - фильтры для выборки подписок
+// swagger:model SubscriptionFilter
 type SubscriptionFilter struct {
 	UserID      *uuid.UUID
 	ServiceName *string
@@ -44,6 +48,7 @@ type SubscriptionFilter struct {
 }
 
 // CostFilter - фильтры для подсчета стоимости
+// swagger:model CostFilter
 type CostFilter struct {
 	UserID      *uuid.UUID
 	ServiceName *string

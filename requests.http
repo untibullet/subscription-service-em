@@ -59,7 +59,7 @@ Content-Type: application/json
 }
 
 ### Удалить подписку (замени ID)
-DELETE {{baseUrl}}/60601fee-2bf1-4721-ae6f-7636e79a0cba
+DELETE {{baseUrl}}/840ebdc5-2f6d-40d6-b6ae-7e74e4099bc5
 
 ### Рассчитать стоимость за период для пользователя
 GET {{baseUrl}}/cost?user_id=60601fee-2bf1-4721-ae6f-7636e79a0cba&start_period=01-2025&end_period=12-2025
